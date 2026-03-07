@@ -3,10 +3,10 @@
 <summary>📚 <b>Table of Contents</b></summary>
 
  1. [About the project](#about)  
- 2. [Main Features](#-main-features)  
+ 2. [Main Features](#feature)  
  3. [Network Topology](#topology)  
  4. [Project Structure](#structure)  
- 5. [Prerequisites](#-prerequisites)  
+ 5. [Prerequisites](#prerequisites)  
  6. [How to run the Project](#run)  
  7. [How to test the Attacks](#attack)  
   
@@ -17,6 +17,7 @@
 
 This project implements a **Software-Defined Networking (SDN) Firewall** using the **Kathara** network emulator and the **Ryu** controller. It features advanced security logic and a **Graphical User Interface (GUI) Dashboard** for rule management and real-time statistics visualization.
 
+<a id="feature"></a>
 # ✨ **Main Features**
 * **Anti-DDoS Protection:** Detects and blocks bursts of packets directed to the same port within a short timeframe.
 * **Anti-Port Scan Protection:** Detects and blocks "Zig-Zag" attacks (connection attempts to different ports in rapid succession).
@@ -56,6 +57,7 @@ Smart_Home_ESP32/
 └── README.md  
 ```                                  
 ---
+<a id="prerequisites"></a>
 # 🚀 **Prerequisites**
 
 To run this project on your computer, you need to have installed:
