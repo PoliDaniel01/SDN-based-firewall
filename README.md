@@ -4,7 +4,7 @@
 
  1. [About the project](#-sdn-based-firewall-with-gui)  
 
- 2. [Main Features](#️-main-features)
+ 2. [Main Features](#️-Main-Features)
   
  3. [Network Topology](#️-network-topology)
   
@@ -12,7 +12,7 @@
   
  5. [Prerequisites](#-prerequisites)
   
- 6. [How to run the Project](#-how-to-run-the-project)
+ 6. [How to run the Project](#-How-to-run-the-project)
 
  7. [How to test the Attacks](#-how-to-test-the-attacks)
   
@@ -71,7 +71,7 @@ To run this project on your computer, you need to have installed:
 
 ---
 
-# 🛠️ **How to run the project**
+# 🛠️ **How to run the Project**
 
 Follow these steps in the exact order:
 
@@ -84,4 +84,4 @@ kathara lclean
 # Starts the network topology
 kathara lstart
 ```
-# ⚔️ **How to test the attacks**
+# ⚔️ **How to test the Attacks**
