@@ -2,17 +2,17 @@
 <details>
 <summary>📚 <b>Table of Contents</b></summary>
 
- 1. [About the project](#-sdn-based-firewall-with-gui)  
+ 1. [About the project](#about)  
  2. [Main Features](#-main-features)  
- 3. [Network Topology](#-network-topology)  
- 4. [Project Structure](#-project-structure)  
+ 3. [Network Topology](#topology)  
+ 4. [Project Structure](#structure)  
  5. [Prerequisites](#-prerequisites)  
- 6. [How to run the Project](#-how-to-run-the-project)  
- 7. [How to test the Attacks](#-how-to-test-the-attacks)  
+ 6. [How to run the Project](#run)  
+ 7. [How to test the Attacks](#attack)  
   
 </details>
 
-
+<a id="about"></a>
 # 🛡️ **SND-based Firewall with GUI**
 
 This project implements a **Software-Defined Networking (SDN) Firewall** using the **Kathara** network emulator and the **Ryu** controller. It features advanced security logic and a **Graphical User Interface (GUI) Dashboard** for rule management and real-time statistics visualization.
@@ -26,7 +26,7 @@ This project implements a **Software-Defined Networking (SDN) Firewall** using t
 * **GUI Dashboard:** User interface written in Python (Tkinter) to dynamically modify thresholds and BAN durations without restarting the controller.
 
 ---
-
+<a id="topology"></a>
 # 🗺️ **Network Topology**
 
 The laboratory simulates a protected corporate network and an external environment (Internet).
@@ -39,6 +39,7 @@ The laboratory simulates a protected corporate network and an external environme
 * **`switch1` & `controller1`:** The SDN core. The switch executes commands from the Ryu controller, which applies the firewall logic.
 
 ---
+<a id="structure"></a>
 # 🗂️ **Project Structure**
 ```
 Smart_Home_ESP32/  
@@ -63,7 +64,7 @@ To run this project on your computer, you need to have installed:
 3. The standard **Tkinter** library (usually included with Python on Windows/Mac. On Linux Ubuntu/Debian, it might be necessary to install it using `sudo apt-get install python3-tk`).
 
 ---
-
+<a id="run"></a>
 # 🛠️ **How to run the Project**
 
 Follow these steps in the exact order:
@@ -77,4 +78,5 @@ kathara lclean
 # Starts the network topology
 kathara lstart
 ```
+<a id="attack"></a>
 # ⚔️ **How to test the Attacks**
