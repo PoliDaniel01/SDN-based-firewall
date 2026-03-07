@@ -1,8 +1,30 @@
-# 🛡️ SDN-based Firewall with GUI
+
+<details>
+<summary>📚 <b>Table of Contents</b></summary>
+
+ 1. [About the project](#-sdn-based-firewall-with-gui)  
+
+ 2. [Main Features](#️-main-features)
+  
+ 3. [Network Topology](#️-network-topology)
+  
+ 4. [Project Structure](#-project-structure)
+  
+ 5. [Prerequisites](#-prerequisites)
+  
+ 6. [How to run the Project](#-how-to-run-the-project)
+
+ 7. [How to test the Attacks](#-how-to-test-the-attacks)
+  
+</details>
+
+
+
+# 🛡️ **SND-based Firewall with GUI**
 
 This project implements a **Software-Defined Networking (SDN) Firewall** using the **Kathara** network emulator and the **Ryu** controller. It features advanced security logic and a **Graphical User Interface (GUI) Dashboard** for rule management and real-time statistics visualization.
 
-## ✨ Main Features
+# ✨ **Main Features**
 * **Anti-DDoS Protection:** Detects and blocks bursts of packets directed to the same port within a short timeframe.
 * **Anti-Port Scan Protection:** Detects and blocks "Zig-Zag" attacks (connection attempts to different ports in rapid succession).
 * **Static Rules:** Unconditional blocking of traffic directed to specific ports (e.g., TCP 2020).
@@ -12,7 +34,7 @@ This project implements a **Software-Defined Networking (SDN) Firewall** using t
 
 ---
 
-## 🗺️ Network Topology
+# 🗺️ **Network Topology**
 
 The laboratory simulates a protected corporate network and an external environment (Internet).
 
@@ -24,21 +46,36 @@ The laboratory simulates a protected corporate network and an external environme
 * **`switch1` & `controller1`:** The SDN core. The switch executes commands from the Ryu controller, which applies the firewall logic.
 
 ---
-
-## 🚀 Prerequisites
+# 🗂️ **Project Structure**
+```
+Smart_Home_ESP32/  
+│  
+├── Readme_img/                                   # Readme images  
+│   ├── ESP32.jpeg                                  # Image of ESP32 board  
+│   ├── House.png                                   # Readme logo image   
+│   └── wiring_diagram.jpg                          # Wiring diagram
+│     
+├── Smart_Home_project/                           # Main project directory  
+│   ├── __pycache__/                                # Compiled Python cache  
+│       └── __init__.cpython-312.pyc                  # Compiled init file  
+│   
+└── README.md  
+```                                  
+---
+# 🚀 **Prerequisites**
 
 To run this project on your computer, you need to have installed:
 1. [Kathara](https://github.com/KatharaFramework/Kathara) (and Docker)
-2. **Python 3** (to launch the GUI on your host PC)
+2. **Python 3.x** (can be run directly from the terminal/command line, or via any IDE like Thonny, VS Code, etc.)
 3. The standard **Tkinter** library (usually included with Python on Windows/Mac. On Linux Ubuntu/Debian, it might be necessary to install it using `sudo apt-get install python3-tk`).
 
 ---
 
-## 🛠️ How to run the project
+# 🛠️ **How to run the project**
 
 Follow these steps in the exact order:
 
-### 1. Start the Virtual Network
+## 1. Start the Virtual Network
 Open a terminal in the main project folder and start Kathara:
 ```bash
 # Cleans any previously hanging labs
@@ -46,3 +83,5 @@ kathara lclean
 
 # Starts the network topology
 kathara lstart
+```
+# ⚔️ **How to test the attacks**
