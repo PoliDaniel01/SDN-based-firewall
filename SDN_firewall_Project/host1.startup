@@ -1,0 +1,8 @@
+#assegno un indirizzo IP della rete LAN
+
+ip address add 10.0.0.1/24 dev eth0
+
+# Default Gateway (Punta al router1)
+
+ip route add default via 10.0.0.254
+

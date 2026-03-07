@@ -50,7 +50,7 @@ The laboratory simulates a protected corporate network and an external environme
 ```
 Smart_Home_ESP32/  
 │  
-├── Readme_img/                                   # Readme images  
+├── SDN_firewall_Project/                                   # Readme images  
 │   ├── ESP32.jpeg                                  # Image of ESP32 board  
 │   ├── House.png                                   # Readme logo image   
 │   └── wiring_diagram.jpg                          # Wiring diagram
