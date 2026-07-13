@@ -33,14 +33,16 @@ It features simple packet filtering by implementing a **Defense in Depth** archi
 
 The laboratory represents a realistic corporate network divided into distinct zones and an external environment (Internet).
 
-1.  **Internet (`203.0.113.x`):** The external untrusted zone (simulating external users and attackers).
-2.  **Perimeter:** A NAT-enabled Router acting as the first line of defense.
+1.  **Internet (`203.0.113.80`):** The external untrusted zone (simulating external users and attackers).
+2.  **Router Perimeter (`203.0.113.1`):** A NAT-enabled Router acting as the first line of defense.
 3.  **Internal Network (`10.0.x.x`):**
     *   `it_dept` (System Administrators - IP `10.0.10.1`).
     *   `marketing1` (Normal Office - IP `10.0.20.1`).
     *   `web_server` (DMZ - IP `10.0.30.1`).
     *   `database` (Critical infrastructure - IP `10.0.40.1`).
 4.  **SDN Switch:** The Open vSwitch hardware acting as the network's core, entirely managed by the Ryu controller.
+5.  **SDN Firewall:** Internal shield of the network, enforcing L3/L4 security rules and physiscally dropping malicious packets to prevent lateral movement.
+6.  **Controller:** The "brain" of the architecture running the Ryu SDN framework
 
 ---
 <a id="structure"></a>
@@ -174,4 +176,4 @@ Type this into the firewall terminal to check the timeouts:
 ```bash
 show-flows
 ```
-## All the logs are saved into the firewall.log file
+## All the logs are saved into the firewall.log file!!
