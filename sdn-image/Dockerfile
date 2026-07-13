@@ -1,6 +1,6 @@
 FROM kathara/base
 
-# 1. Installazione pacchetti di sistema
+# system packages installation
 RUN apt-get update && apt-get install -y \
     python3 \
     python3-pip \
@@ -11,23 +11,21 @@ RUN apt-get update && apt-get install -y \
     tcpdump \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Installiamo RYU e la versione NUOVA di Eventlet
-# Eventlet 0.33.3 risolve i crash di Python 3.11 (TimeoutError)
+# install Ryu SDN Framework and a specific Eventlet version
+# 0.33.3 version is required to prevent timeouterror crashes on python 3.11
 RUN pip3 install ryu --break-system-packages
 RUN pip3 install "eventlet==0.33.3" --break-system-packages
 
-# --- PATCH DI COMPATIBILITÀ (FRANKENSTEIN) ---
+# PYTHON 3.11 COMPATIBILITY PATCHES FOR RYU
 
-# PATCH 1: Reinseriamo ALREADY_HANDLED (Risolve il tuo errore attuale)
-# Ryu cerca questa variabile che è stata rimossa. Noi la ricreiamo finta.
+# 1: reintroduce ALREADY_HANDLED in Eventlet WSGI
+# Ryu looks for this variable, which was removed in newer Eventlet version. created this to prevent import crashes at startup
 RUN echo "ALREADY_HANDLED = object()" >> /usr/local/lib/python3.11/dist-packages/eventlet/wsgi.py
 
-# PATCH 2: Fix importazione Socket (Risolve eventuali errori AF_INET)
-# Diciamo a eventlet di usare il socket normale invece di quello "green" che spesso fallisce.
+# 2: Fix Socket import behavior
+# Force eventlet to use the standard Python socket module, the standard one cause AF_INET resolution errors inside Kathara containers
 RUN sed -i 's/from eventlet.green import socket/import socket/g' /usr/local/lib/python3.11/dist-packages/eventlet/convenience.py
 
-# -----------------------------------------------
-
-# 3. Preparazione cartelle OVS
+# 3. Open vSwitch directories preparation
 RUN mkdir -p /var/run/openvswitch
 RUN mkdir -p /var/log/openvswitch
