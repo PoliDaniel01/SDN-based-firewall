@@ -1,0 +1,38 @@
+# Enable the physical interface connected to the Firewall
+ip link set dev eth0 up
+
+# Create sub-interfaces for VLANs
+
+# VLAN 10 Gateway (IT)
+ip link add link eth0 name eth0.10 type vlan id 10
+ip link set dev eth0.10 up
+ip address add 10.0.10.254/24 dev eth0.10
+
+# VLAN 20 Gateway (Marketing)
+ip link add link eth0 name eth0.20 type vlan id 20
+ip link set dev eth0.20 up
+ip address add 10.0.20.254/24 dev eth0.20
+
+# VLAN 30 Gateway (Web Server) 
+ip link add link eth0 name eth0.30 type vlan id 30
+ip link set dev eth0.30 up
+ip address add 10.0.30.254/24 dev eth0.30
+
+# VLAN 40 Gateway (Database)
+ip link add link eth0 name eth0.40 type vlan id 40
+ip link set dev eth0.40 up
+ip address add 10.0.40.254/24 dev eth0.40
+
+# External Interface (To the Internet)
+ip address add 203.0.113.1/24 dev eth1
+
+# NAT RULES
+
+# Enable NAT (Masquerading) for outbound Internet access
+iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE
+
+# Port Forwarding: Forward incoming traffic on the port 80 to the Web Server
+iptables -t nat -A PREROUTING -i eth1 -p tcp --dport 80 -j DNAT --to-destination 10.0.30.1:80
+
+iptables -A FORWARD -i eth1 -p icmp -j DROP
+iptables -I INPUT -p icmp -j DROP

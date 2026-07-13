@@ -1,0 +1,51 @@
+# Cleanup and Manual Start of Open vSwitch
+
+killall ovsdb-server ovs-vswitchd
+
+# Creatig necessary directories
+ 
+mkdir -p /var/run/openvswitch
+mkdir -p /var/log/openvswitch
+mkdir -p /etc/openvswitch
+
+# MANUAL OVS STARTUP
+
+# Database creation (only if it doesn't exists)
+if [ ! -f /etc/openvswitch/conf.db ]; then
+    ovsdb-tool create /etc/openvswitch/conf.db /usr/share/openvswitch/vswitch.ovsschema
+fi
+
+# Start the database server
+ovsdb-server --remote=punix:/var/run/openvswitch/db.sock \
+             --remote=db:Open_vSwitch,Open_vSwitch,manager_options \
+             --pidfile --detach --log-file
+
+# Initialize swtich configuration
+ovs-vsctl --no-wait init
+
+# Start the main daemon
+ovs-vswitchd --pidfile --detach --log-file
+
+# NETWORK CONFIGURATION (SDN FIREWALL)
+
+# IP for the Control Netwrok (SND Control Plane)
+ip address add 192.168.0.254/24 dev eth0
+
+# Bridge creation
+ovs-vsctl add-br br0
+
+# Enable Redundancy (Spanning Tree Protocol)
+ovs-vsctl set bridge br0 stp_enable=true
+
+# TRUNK Ports to the Router
+ovs-vsctl add-port br0 eth1
+
+# TRUNK ports to the Corporate Switch (dual backup line)
+ovs-vsctl add-port br0 eth2
+ovs-vsctl add-port br0 eth3
+
+# Connect to the Ryu controller
+ovs-vsctl set-controller br0 tcp:192.168.0.1:6633
+
+
+echo "alias show-flows=\"ovs-ofctl dump-flows br0 | grep -v 'NXST' | sed -E 's/ *cookie=[^,]*, //g; s/table=[^,]*, //g; s/idle_timeout=[^,]*, //g; s/idle_age=[^,]*, //g; s/ip,//g; s/,nw_src=/, nw_src=/g; s/ actions=/, actions=/g'\"" >> /root/.bashrc

@@ -1,0 +1,8 @@
+# IP Assignment (DMZ Subnet - VLAN30)
+ip address add 10.0.30.1/24 dev eth0
+
+# Default Gateway
+ip route add default via 10.0.30.254
+
+# Start the web server to expose port 80 to attacks
+python3 -m http.server 80 &

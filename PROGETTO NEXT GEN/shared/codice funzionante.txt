@@ -1,0 +1,257 @@
+import logging # <--- Serve per creare i log file
+import time # <--- Necessario per la funzione time.time()
+import os
+from ryu.base import app_manager
+from ryu.controller import ofp_event
+from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER
+from ryu.controller.handler import set_ev_cls
+from ryu.ofproto import ofproto_v1_3
+from ryu.lib.packet import packet
+from ryu.lib.packet import ethernet
+from ryu.lib.packet import ether_types
+from ryu.lib.packet import tcp  # <--- Importiamo la libreria TCP
+from ryu.lib.packet import in_proto # <--- Per i codici protocollo (TCP=6)
+from ryu.lib.packet import ipv4
+
+
+class SimpleSwitch13(app_manager.RyuApp):
+    OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
+
+    def __init__(self, *args, **kwargs):
+        super(SimpleSwitch13, self).__init__(*args, **kwargs)
+        self.mac_to_port = {}
+        
+        # --- FIX ORARIO ITALIANO ---
+        
+        os.environ['TZ'] = 'Europe/Rome'
+        time.tzset()
+        
+        # --- STATISTICHE SEQUENZIALI ---
+        self.monitor_stats = {}
+        
+        # SOGLIE
+        self.DDOS_THRESHOLD = 200   # Dopo 10 volte sulla STESSA porta -> BAN
+        self.SCAN_THRESHOLD = 5    # Dopo 5 porte DIVERSE in sequenza -> BAN
+        self.TIME_WINDOW = 2.0     # Reset contatori se passa troppo tempo (silenzio)
+        
+        # --- CONFIGURAZIONE LOGGING SU FILE ---
+        # Crea o sovrascrive un file 'firewall.log' con data, ora e messaggio.
+        
+        # CONFIGURAZIONE LOGGING MANUALE
+        log_file = '/shared/firewall.log'
+        
+        # Creiamo un gestore che scrive su file
+        file_handler = logging.FileHandler(log_file, mode='a')
+        
+        # Definiamo il formato Data - Messaggio
+        formatter = logging.Formatter('%(asctime)s - %(message)s')
+        file_handler.setFormatter(formatter)
+        
+        # Aggiungiamo questo gestore al Logger principale di sistema
+        root_logger = logging.getLogger()
+        root_logger.addHandler(file_handler)
+        root_logger.setLevel(logging.INFO)
+        
+        
+        # VARIABILI PER IL BAN DURATION
+        self.banned_ips = {}
+        self.BAN_DURATION = 60
+        
+        
+    #Quando lo switch si collega installiamo le regole di default
+    @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
+    def switch_features_handler(self, ev):
+        datapath = ev.msg.datapath
+        ofproto = datapath.ofproto
+        parser = datapath.ofproto_parser
+        
+        # Regola: "Tutto ciò che non conosci, mandalo al Controller"
+        match = parser.OFPMatch()
+        actions = [parser.OFPActionOutput(ofproto.OFPP_CONTROLLER,
+                                          ofproto.OFPCML_NO_BUFFER)]
+        self.add_flow(datapath, 0, match, actions)
+
+    def add_flow(self, datapath, priority, match, actions, hard_timeout=0, idle_timeout=0):
+        ofproto = datapath.ofproto
+        parser = datapath.ofproto_parser
+        inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        
+        # Qui passiamo i timeout al messaggio OpenFlow
+        mod = parser.OFPFlowMod(datapath=datapath,
+                                priority=priority,
+                                match=match,
+                                instructions=inst,
+                                hard_timeout=hard_timeout,		#scadenza "fissa"
+                                idle_timeout=idle_timeout)		#scadenza per inattività
+        datapath.send_msg(mod)
+
+    #Quando arriva iun pacchetto (Packet-In)
+    @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
+    def _packet_in_handler(self, ev):
+        msg = ev.msg
+        datapath = msg.datapath
+        ofproto = datapath.ofproto
+        parser = datapath.ofproto_parser
+        in_port = msg.match['in_port']
+
+        pkt = packet.Packet(msg.data)
+        eth = pkt.get_protocols(ethernet.ethernet)[0]
+        
+        #Ignoriamo i pacchetti LLDP (protocolli di scoperta rete) per pulizia
+        if eth.ethertype == ether_types.ETH_TYPE_LLDP:
+            return
+
+        dst = eth.dst
+        src = eth.src
+        dpid = datapath.id
+        
+        blocked = False
+
+        # --- AGGIUNTA PER LA GUI: LEGGE LE IMPOSTAZIONI IN TEMPO REALE ---
+        try:
+            import json
+            with open('/shared/config.json', 'r') as f:
+                config = json.load(f)
+                self.DDOS_THRESHOLD = config.get('ddos_threshold', self.DDOS_THRESHOLD)
+                self.SCAN_THRESHOLD = config.get('scan_threshold', self.SCAN_THRESHOLD)
+                self.BAN_DURATION = config.get('ban_duration', self.BAN_DURATION)
+        except Exception:
+            pass # Se il file non esiste ancora o c'è un errore, usa i valori di
+        
+        # --- FINE AGGIUNTA GUI
+
+        # --- SEZIONE FIREWALL ---
+        # --- ANALISI DEL TRAFFICO ---
+        pkt_tcp = pkt.get_protocol(tcp.tcp)
+        
+        if pkt_tcp:
+            ip_pkt = pkt.get_protocol(ipv4.ipv4) # <--- Serve l'IP sorgente/destinazione
+            
+            # Non processiamo i pacchetti che non sono IPV4 o che sono indirizzi MAC
+            
+            if not ip_pkt:
+                return
+            
+            src_ip = ip_pkt.src
+            dst_port = pkt_tcp.dst_port
+            current_time = time.time() # <--- Ottieni il timestap attuale
+            
+            # CONTROLLO STATO DI BAN ATTIVO
+            if src_ip in self.banned_ips:
+                if current_time >= self.banned_ips[src_ip]:
+                    #il BAN è scaduto, lo rimuoviamo
+                    del self.banned_ips[src_ip]
+                else:
+                    # IP ancora in BAN: Ignoriamo il pacchetto e terminiamo.
+                    return # <--- INTERROMPE L'ELABORAZIONE
+            # FINE CONTROLLO STATO DI BAN
+            
+            # Verifichiamo solo i pacchetti SYN (inizio connessione) per pulizia
+            is_syn = (pkt_tcp.bits & tcp.TCP_SYN) and not (pkt_tcp.bits & tcp.TCP_ACK)
+            
+            if is_syn:
+                # 1. Se l'IP è nuovo, inizializziamo lo stato
+                if src_ip not in self.monitor_stats:
+                    self.monitor_stats[src_ip] = {
+                        'last_port': dst_port, 
+                        'same_count': 0, 
+                        'diff_count': 0, 
+                        'timestamp': current_time
+                    }
+                else:
+                    stats = self.monitor_stats[src_ip]
+                    
+                    # 2. Reset temporale: se è passato troppo tempo dall'ultimo pacchetto, resetta tutto
+                    if current_time - stats['timestamp'] > self.TIME_WINDOW:
+                        stats['same_count'] = 0
+                        stats['diff_count'] = 0
+                        # Nota: non resettiamo last_port, serve come riferimento
+                    
+                    # 3. LOGICA SEQUENZIALE
+                    if dst_port == stats['last_port']:
+                        # STESSA PORTA DEL PRECEDENTE -> Comportamento DDoS
+                        stats['same_count'] += 1
+                        # (Opzionale: puoi azzerare diff_count se vuoi che siano esclusivi)
+                        stats['diff_count'] = 0 
+                    else:
+                        # PORTA DIVERSA DAL PRECEDENTE -> Comportamento Scan
+                        stats['diff_count'] += 1
+                        # (Opzionale: puoi azzerare same_count)
+                        stats['same_count'] = 0
+                    
+                    # Aggiorniamo lo stato per il prossimo giro
+                    stats['last_port'] = dst_port
+                    stats['timestamp'] = current_time
+
+                    # 4. CONTROLLO SOGLIE E BAN
+                    
+                    # CASO A: DDoS (Ripetizione stessa porta)
+                    if stats['same_count'] > self.DDOS_THRESHOLD:
+                        # Messaggio da salvare
+                        log_msg = f"ALLARME DDoS: {src_ip} ha colpito la porta {dst_port} {stats['same_count']} volte di fila!"
+                        logging.info(log_msg)
+                        
+                        match = parser.OFPMatch(eth_type=ether_types.ETH_TYPE_IP, ipv4_src=src_ip)
+                        self.add_flow(datapath, 250, match, [], hard_timeout=self.BAN_DURATION)
+                        
+                        action_msg = f"BAN DDoS ATTIVATO per {src_ip}\n"
+                        logging.info(action_msg)
+                        
+                        # Dichiara l'IP come bannato fino a (ora + durata)
+                        self.banned_ips[src_ip] = current_time + self.BAN_DURATION
+                        
+                        # Resetta le statistiche monitor_stats per ripartire pulite al termine del ban
+                        del self.monitor_stats[src_ip]
+                        
+                        blocked = True
+                        return
+
+                    # CASO B: Port Scan (Variazione porta)
+                    if stats['diff_count'] > self.SCAN_THRESHOLD:
+                        # Messaggio da salvare
+                        log_msg = f"ALLARME SCAN: {src_ip} ha cambiato porta {stats['diff_count']} volte in sequenza!"
+                        logging.info(log_msg)
+                        
+                        match = parser.OFPMatch(eth_type=ether_types.ETH_TYPE_IP, ipv4_src=src_ip)
+                        self.add_flow(datapath, 200, match, [], hard_timeout=15)
+                        
+                        action_msg = f"BAN Scan ATTIVATO per {src_ip}\n"
+                        logging.info(action_msg)
+                        
+                        self.banned_ips[src_ip] = current_time + 15 
+                        
+                        del self.monitor_stats[src_ip]
+                        blocked = True
+                        return
+
+            # 5. REGOLA STATICA (Porta 2020)
+            if not blocked and pkt_tcp.dst_port == 2020:
+                # Messaggio da salvare
+                log_msg = f"BLOCKING TCP PORT 2020 from {src_ip}\n"
+                logging.info(log_msg)
+                
+                match = parser.OFPMatch(eth_type=ether_types.ETH_TYPE_IP,ip_proto=in_proto.IPPROTO_TCP,tcp_dst=2020)
+                self.add_flow(datapath, 100, match, [], hard_timeout=30)
+                blocked = True
+                return
+
+        # --- SWITCHING L2 ---
+        self.mac_to_port.setdefault(dpid, {})
+        self.mac_to_port[dpid][src] = in_port
+
+        if dst in self.mac_to_port[dpid]:
+            out_port = self.mac_to_port[dpid][dst]
+        else:
+            out_port = ofproto.OFPP_FLOOD
+
+        actions = [parser.OFPActionOutput(out_port)]
+        
+        data = None
+        if msg.buffer_id == ofproto.OFP_NO_BUFFER:
+            data = msg.data
+        out = parser.OFPPacketOut(datapath=datapath,
+                                  buffer_id=msg.buffer_id,
+                                  in_port=in_port,
+                                  actions=actions,
+                                  data=data)
+        datapath.send_msg(out)

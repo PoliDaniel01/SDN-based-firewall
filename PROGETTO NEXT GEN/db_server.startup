@@ -1,0 +1,5 @@
+# IP Assignment (Private Database - VLAN 40)
+ip address add 10.0.40.1/24 dev eth0
+
+# Default Gateway
+ip route add default via 10.0.40.254

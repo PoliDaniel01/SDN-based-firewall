@@ -1,0 +1,5 @@
+# Fictitious Public IP 
+ip address add 203.0.113.80/24 dev eth0
+
+# Default route to the corporate router (needed to reach the Web Server)
+ip route add default via 203.0.113.1
