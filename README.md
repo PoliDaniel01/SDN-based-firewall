@@ -92,7 +92,10 @@ To run this project on your computer, you need to have installed:
 
 Follow these steps in the exact order:
 
-## 1. Start the Virtual Network
+## 1. Prepare the environment
+First of all download all the github folder and put everything into a folder you created on your pc
+
+## 2. Start the Virtual Network
 Open a terminal in the main project folder and start Kathara:
 ```bash
 # Cleans any previously hanging labs
@@ -101,12 +104,12 @@ kathara lclean
 # Starts the network topology
 kathara lstart
 ```
-## 2. Run the SDN Controller:
+## 3. Run the SDN Controller:
 Open a terminal inside the controller node and run:
 ```bash
-ryu-manager controller.py
+ryu-manager /shared/controller.py
 ```
-## 3. Launch the Dashboard GUI:
+## 4. Launch the Dashboard GUI:
 In the terminal of the main project launch the Gui.py program:
 ```bash
 python ./shared/gui.py
@@ -170,7 +173,7 @@ Expected Result: succeeded, the connection is enstablished instantly.
 
 
 ##  **OpenFlow Hardware Monitoring (Custom CLI Alias)**
-During live attacks, the SDN switch dynamically populates its OpenFlow flow tables. The firewall has a custom sed/grep parsing alias automatically injected into the .bashrc in the startup file.
+During live attacks, the SDN switch dynamically populates its OpenFlow flow tables. The firewall has a custom `sed/grep` parsing alias automatically injected into the .bashrc in the startup file.
 Type this into the firewall terminal to check the timeouts:
 
 ```bash

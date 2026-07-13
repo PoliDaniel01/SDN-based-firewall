@@ -1,0 +1,19 @@
+### ENVIRONMENT MANAGEMENT (KATHARA and GUI)
+kathara lstart                                         : Starts the entire network simulation (reads lab.conf).
+kathara lclean                                         : Stops all containers and wipes the network environment.
+python ./shared/gui.py                                 : Starts the gui.py file
+
+### COMPONENT STARTUP and CHECKING CONNECTIONS
+(Controller) ryu-manager /shared/controller.py         : Starts the SDN controller (run inside the controller node).
+(Switch) ovs-vsctl show 	                           : Show the configuration 
+
+### MONITORING 
+(Firewall) show-flows                                  : Displays the active hardware rules (IPS/Firewall) with clean output.
+(Switch) tail -f /shared/firewall.log                  : Used to live check all the logs that appears on the firewall.log
+
+### ATTACK SIMULATION AND TESTING
+ping -c 3 <IP>                                         : Sends 3 ICMP packets (Tests Stealth Mode).
+nc -zv <IP> <PORT>                                     : Tests a single legitimate TCP connection.
+for i in {1..300}; do nc -zv -w 1 <IP> <PORT> & done   : Simulates a DDoS attack (SYN Flood).
+for p in {81..99}; do nc -zv -w 1 <IP> $p & done       : Simulates a Port Scan in the specified range.
+nc -lk -p <PORT> &                                     : Opens a listening port (e.g., on the db_server).
