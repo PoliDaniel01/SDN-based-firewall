@@ -74,8 +74,8 @@ SDN-based-firewall/
 ├── sdn-image/                           
 │   └── Dockerfile                              # Custom Ryu image.
 │                    
-├── README.md                                   # Project main documentation.
-└── comandi kathara.txt                         # Useful CLI cheatsheet.
+├── Kathara commands.txt                        # Useful CLI cheatsheet.
+└── README.md                                   # Project main documentation.
 ```                                  
 ---
 <a id="prerequisites"></a>
