@@ -8,12 +8,12 @@
  4. [Project Structure](#structure)  
  5. [Prerequisites](#prerequisites)  
  6. [How to run the Project](#run)  
- 7. [How to test the Attacks](#attack)  
+ 7. [How to test the Attacks](#test)  
   
 </details>
 
 <a id="about"></a>
-# 🛡️ **SND-based Firewall with GUI**
+# **SND-based Firewall with GUI**
 
 This repository contains the implementation for a **Software-Defined Networking (SDN) Firewall** developed for a university project. It uses the Ryu SDN Framework and the OpenFlow 1.3 protocol to dynamically secure a simulated enterprise network using the **Kathara** network emulator.
 It features simple packet filtering by implementing a **Defense in Depth** architecture, dynamic behavioral analysis, and a **Graphical User Interface (GUI) Dashboard** for rule management and real-time statistics visualization.
@@ -111,6 +111,7 @@ python ./shared/gui.py
 ```
 there you can change the number of packets for DDoS and Scan attack and the ban time for ip that does the attack (Presso "Push config to Cotnroller) to set it.
 
+<a id="test"></a>
 #  **Testing & Validation Guide**
 Run these codes to test the firewall:
 ## TEST 1. Perimeter Protection & NAT
