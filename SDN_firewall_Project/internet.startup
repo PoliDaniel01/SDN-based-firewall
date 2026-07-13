@@ -1,3 +1,0 @@
-# IP Pubblico fittizio
-
-ip address add 203.0.113.80/24 dev eth0

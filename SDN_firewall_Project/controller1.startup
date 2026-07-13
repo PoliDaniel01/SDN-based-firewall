@@ -1,3 +1,0 @@
-# Assegno un indirizzo ip al controller
-
-ip address add 192.168.0.2/24 dev eth0
