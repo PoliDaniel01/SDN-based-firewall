@@ -23,7 +23,7 @@ It features simple packet filtering by implementing a **Defense in Depth** archi
 * **Anti-DDoS Protection:** Detects and blocks bursts of packets directed to the same port within a short timeframe.
 * **Anti-Port Scan Protection:** Detects and blocks Port Scan attacks (connection attempts to different ports in rapid succession).
 * **Static Rules:** Unconditional blocking of traffic directed to specific ports (e.g., TCP 2020).
-* **Whitelist (VIP Pass):** Trusted IP addresses (e.g., the It_dept) to bypass firewall checks.
+* **Whitelist:** Trusted IP addresses (e.g., the It_dept) to bypass firewall checks.
 * **File Logging:** Persistent logging of alarms and BANs with formatted real-time timestamps in the `firewall.log` file.
 * **GUI Dashboard:** User interface written in Python (Tkinter) to dynamically modify thresholds and BAN durations without restarting the controller.
 
@@ -113,7 +113,8 @@ there you can change the number of packets for DDoS and Scan attack and the ban 
 
 <a id="test"></a>
 #  **Testing & Validation Guide**
-Run these codes to test the firewall:
+
+Run these codes to test the firewall (you can find all the codes also into Kathara commands.txt):
 ## TEST 1. Perimeter Protection & NAT
 From the internet device (external attacker):
 
@@ -165,10 +166,12 @@ nc -zv 10.0.40.1 2020
 ```
 Expected Result: succeeded, the connection is enstablished instantly.
 
-#  **OpenFlow Hardware Monitoring (Custom CLI Alias)**
+
+##  **OpenFlow Hardware Monitoring (Custom CLI Alias)**
 During live attacks, the SDN switch dynamically populates its OpenFlow flow tables. The firewall has a custom sed/grep parsing alias automatically injected into the .bashrc in the startup file.
 Type this into the firewall terminal to check the timeouts:
 
 ```bash
 show-flows
 ```
+## All the logs are saved into the firewall.log file
